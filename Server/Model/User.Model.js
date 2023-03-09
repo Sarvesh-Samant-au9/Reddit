@@ -49,6 +49,11 @@ const userSchema = new mongoose.Schema(
     verificationToken: {
       type: String,
     },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minLength: [10, "Password must be {VALUE} long"],
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },

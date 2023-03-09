@@ -8,18 +8,20 @@ const loginUser = tryCatch(async (req, res, next) => {
   if (!email || !password) {
     return next(new ErrorHandler("All fields are required", 400));
   }
-  const findByEmail = await UserModel.findOne({ email });
+  const findByEmail = await UserModel.findOne({ email }).select("+isVerified");
   if (!findByEmail) {
     return next(new ErrorHandler("User is already registered", 400));
   }
+  // console.log(findByEmail);
   if (!findByEmail.isVerified) {
     return next(new ErrorHandler("Please verify your mail", 400));
   }
   const user = await UserModel.findOne({ email }).select("+password");
-  const credentialsValid = await bcrypt.compare(password, user.password);
-  if (!credentialsValid) {
-    return next(new ErrorHandler("Invalid Credentials", 400));
-  }
+  console.log(user);
+  // const credentialsValid = await bcrypt.compare(password, user.password);
+  // if (!credentialsValid) {
+  //   return next(new ErrorHandler("Invalid Credentials", 400));
+  // }
   const payloadToken = {
     userId: user._id,
   };

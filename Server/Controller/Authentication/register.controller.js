@@ -35,9 +35,9 @@ const registerUser = tryCatch(async (req, res, next) => {
   }
   user = new UserModel({
     name,
-    email,
+    email: email.toLowerCase(),
     password,
-    userName,
+    userName: userName.toLowerCase(),
   });
   user.password = await bcrypt.hash(password, 10);
 
@@ -76,6 +76,12 @@ const registerUser = tryCatch(async (req, res, next) => {
     });
   }
   await user.save();
+  let displayUser = {
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar,
+    userName: user.userName,
+  };
   jwt.sign({ userId: user._id }, process.env.JWT_SECRET, (err, token) => {
     if (err) {
       return next(new ErrorHandler("Registration went wrong", 404));
@@ -84,7 +90,7 @@ const registerUser = tryCatch(async (req, res, next) => {
       success: true,
       message: "User Registered",
       token,
-      user,
+      user: displayUser,
     });
   });
 });
@@ -123,6 +129,7 @@ const getUserInfo = tryCatch(async (req, res, next) => {
   });
 });
 
+// /api/v1/auth/forgot-password
 const forgotPassword = tryCatch(async (req, res, next) => {
   const { email } = req.body;
   const user = await UserModel.findOne({ email });
@@ -165,6 +172,7 @@ const forgotPassword = tryCatch(async (req, res, next) => {
   });
 });
 
+// /api/v1/auth/reset-password
 const resetPassword = tryCatch(async (req, res, next) => {
   const resetToken = crypto
     .createHash("sha256")
@@ -200,13 +208,51 @@ const resetPassword = tryCatch(async (req, res, next) => {
   });
 });
 
+// /api/v1/auth/update-profile
 const updateProfile = tryCatch(async (req, res, next) => {
-  const { userName } = req.body;
-  const user = await UserModel.findOne({ userName });
-  if (user) {
-    return next(new ErrorHandler("UserName already taken", 400));
+  let { userName } = req.body;
+  let name = req.body.name;
+  if (userName) userName = userName.trim().toLowerCase();
+  if (name) name = name.trim();
+  if (userName.trim().length < 5) {
+    return next(
+      new ErrorHandler("Username should have atleast 5 characters", 400)
+    );
   }
-  
+  let user = await UserModel.findOne({ userName });
+  if (user) {
+    return next(new ErrorHandler("Username is already taken", 400));
+  }
+  const userInfo = await UserModel.findById(req.userId);
+  if (!userInfo) {
+    return next(new ErrorHandler("User not available", 400));
+  }
+
+  if (req.file) {
+    userInfo.avatar = req.file.path;
+  }
+  const updatedUser = {
+    userName,
+    name,
+    avatar: userInfo.avatar,
+  };
+
+  user = await UserModel.findByIdAndUpdate(req.userId, updatedUser, {
+    new: true,
+  });
+
+  return res.status(201).json({
+    success: true,
+    message: "Updated",
+    user,
+  });
 });
 
-module.exports = { registerUser };
+module.exports = {
+  registerUser,
+  updatePassword,
+  resetPassword,
+  getUserInfo,
+  forgotPassword,
+  updateProfile,
+};
