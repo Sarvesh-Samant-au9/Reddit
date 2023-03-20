@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const tryCatch = require("../../Middleware/tryCatch");
 const UserModel = require("../../Model/User.Model");
 const ErrorHandler = require("../../Utils/ErrorHandler");
+
 const loginUser = tryCatch(async (req, res, next) => {
   const { email, password } = req.body;
   if (!email || !password) {
