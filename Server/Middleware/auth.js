@@ -12,7 +12,7 @@ const auth = tryCatch(async (req, res, next) => {
     return next(new ErrorHandler("Authorization Denied 2", 401));
   }
   req.userId = decoded.userId;
-  console.log(req.userId);
+  // console.log(req.userId);
   next();
 });
 

@@ -4,6 +4,7 @@ const connectDB = require("./Config/connectDb.js");
 const error = require("./Middleware/error.js");
 const cors = require("cors");
 const authRouter = require("./Routes/auth.routes.js");
+const postRoute = require("./Routes/post.routes.js");
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -43,6 +44,7 @@ console.log(__dirname);
 // app.use("/api/v1/auth", authRoutes);
 // app.use("/api/v1/url", urlRoutes);
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/post", postRoute);
 connectDB();
 app.use(error);
 

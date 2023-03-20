@@ -20,7 +20,7 @@ const verifyAndOnboarding = tryCatch(async (req, res, next) => {
   }
   user.isVerified = true;
   user.verificationToken = undefined;
-  // if (req.file) user.avatar = req.file.path;
+  if (req.file) user.avatar = req.file.path;
   await user.save();
   jwt.sign({ userId: user._id }, process.env.JWT_SECRET, (err, token) => {
     if (err) throw err;

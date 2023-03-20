@@ -18,11 +18,11 @@ const loginUser = tryCatch(async (req, res, next) => {
     return next(new ErrorHandler("Please verify your mail", 400));
   }
   const user = await UserModel.findOne({ email }).select("+password");
-  console.log(user);
-  // const credentialsValid = await bcrypt.compare(password, user.password);
-  // if (!credentialsValid) {
-  //   return next(new ErrorHandler("Invalid Credentials", 400));
-  // }
+  // console.log(user);
+  const credentialsValid = await bcrypt.compare(password, user.password);
+  if (!credentialsValid) {
+    return next(new ErrorHandler("Invalid Credentials", 400));
+  }
   const payloadToken = {
     userId: user._id,
   };

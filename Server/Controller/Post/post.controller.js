@@ -20,6 +20,7 @@ const getPosts = tryCatch(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     posts,
+    message: "Data Fetched",
   });
 });
 
@@ -51,11 +52,47 @@ const getSearchPosts = tryCatch(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     searchedPosts,
+    message: "Data Fetched",
+  });
+});
+
+const getParticularPost = tryCatch(async (req, res, next) => {
+  const { id } = req.params;
+  const post = await PostModel.findById(id);
+  if (!post) {
+    return next(new ErrorHandler("Post not found", 404));
+  }
+  const data = await post.populate("author", ["userName", "avatar"]);
+  return res.status(200).json({
+    success: true,
+    message: "Post fetched",
+    data,
   });
 });
 
 const createPost = tryCatch(async (req, res, next) => {
   const { postTitle, postText, postLink, postType } = req.body;
+  let post = {};
+  if (req.file && req.file.path) {
+    post.postImage = req.file.path;
+  }
+  post = {
+    ...post,
+    postTitle,
+    postLink,
+    postText,
+    postType,
+  };
+  const user = await UserModel.findById(req.user);
+  if (!user) {
+    return next(new ErrorHandler("User does not exist", 404));
+  }
+  const postData = new PostModel(post);
+  return res.status(201).json({
+    success: true,
+    message: "New Post created",
+    post: postData,
+  });
 });
 
-module.exports = { getPosts, getSearchPosts };
+module.exports = { getPosts, getSearchPosts, getParticularPost, createPost };

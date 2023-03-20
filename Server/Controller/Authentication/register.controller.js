@@ -99,14 +99,15 @@ const registerUser = tryCatch(async (req, res, next) => {
 const updatePassword = tryCatch(async (req, res, next) => {
   const userParams = req.params.user;
   const user = await UserModel.findById(userParams).select("+password");
+  // console.log(user)
   if (!user) {
     return next(new ErrorHandler("User unavailable", 400));
   }
+  let { newPassword, currentPassword } = req.body;
   const matchPassword = await bcrypt.compare(currentPassword, user.password);
   if (!matchPassword) {
     return next(new ErrorHandler("Password do not match", 404));
   }
-  let { newPassword, currentPassword } = req.body;
   newPassword = newPassword.trim();
   if (newPassword.length < 10) {
     return next(new ErrorHandler("Password is too short", 404));
@@ -142,17 +143,18 @@ const forgotPassword = tryCatch(async (req, res, next) => {
     .update(resetToken)
     .digest("hex");
   user.resetPasswordExpire = Date.now() + 30 * 60 * 1000;
-  const resetUrl = `${req.protocol}://${req.get(
+  const resetURL = `${req.protocol}://${req.get(
     "host"
   )}/password/reset/${resetToken}`;
 
-  const htmlTemplate = await readHTML(
+  const htmlTemplate = await htmlReader(
     path.join(__dirname, "..", "..", "Email", "resetPassword.html")
   );
-
+  // console.log(resetURL);
   const handleBarTemplate = Handlebars.compile(htmlTemplate);
-  const replace = { resetUrl };
+  const replace = { resetURL };
   const html = handleBarTemplate(replace);
+  // console.log(html, "HERE");
   try {
     await sendEmail({
       to: user.email,
@@ -200,7 +202,8 @@ const resetPassword = tryCatch(async (req, res, next) => {
   }
   user.password = await bcrypt.hash(req.body.password, 10);
   user.resetPasswordExpire = undefined;
-  user.resetPasswordExpire = undefined;
+  user.resetPasswordToken = undefined;
+  // resetPasswordToken
   await user.save();
   return res.status(200).json({
     success: true,
@@ -223,6 +226,7 @@ const updateProfile = tryCatch(async (req, res, next) => {
   if (user) {
     return next(new ErrorHandler("Username is already taken", 400));
   }
+  // console.log(req.userId, "HERE");
   const userInfo = await UserModel.findById(req.userId);
   if (!userInfo) {
     return next(new ErrorHandler("User not available", 400));
