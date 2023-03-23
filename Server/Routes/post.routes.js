@@ -4,15 +4,19 @@ const {
   getParticularPost,
   createPost,
   getSearchPosts,
+  updatePost,
+  deletePost,
 } = require("../Controller/Post/post.controller");
 const { auth } = require("../Middleware/auth");
 const upload = require("../Middleware/imageUpload");
 const postRoute = express();
-postRoute.route("/post").get(getPosts);
-postRoute.route("/post/:id").get(getParticularPost);
+postRoute.route("/").get(getPosts);
 postRoute
-  .route("/post/create")
-  .post(auth, upload.single("postImage"), createPost);
-postRoute.route("/search").get(getSearchPosts);
+  .route("/:id")
+  .get(getParticularPost)
+  .put(auth, upload.single("postImage"), updatePost)
+  .delete(auth, deletePost);
+postRoute.route("/search/text").get(getSearchPosts);
+postRoute.route("/create").post(auth, upload.single("postImage"), createPost);
 
 module.exports = postRoute;
